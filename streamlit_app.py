@@ -29,6 +29,18 @@ def format_character_name(name):
 
 # Function to generate census PDF
 def generate_census(df, font_path, output_pdf):
+    # Check if the font file exists
+    if os.path.exists(font_path):
+        try:
+            pdfmetrics.registerFont(TTFont('MedievalFont', font_path))
+            font_name = 'MedievalFont'
+        except Exception as e:
+            st.error(f"Failed to load font: {e}")
+            font_name = 'Helvetica'  # Fallback to default font
+    else:
+        st.error("Font file not found, using default font.")
+        font_name = 'Helvetica'  # Fallback to default font
+
     # Filter records where the character should be included in the public census
     df = df[df.iloc[:, 4].str.contains("Tak", na=False)]
 
@@ -39,14 +51,11 @@ def generate_census(df, font_path, output_pdf):
     pdf = SimpleDocTemplate(output_pdf, pagesize=A4, rightMargin=2 * cm, leftMargin=2 * cm, topMargin=2 * cm, bottomMargin=2 * cm)
     elements = []
 
-    # Register custom font (medieval font)
-    pdfmetrics.registerFont(TTFont('MedievalFont', font_path))
-
     # Create reusable paragraph styles
-    title_style = create_paragraph_style('MedievalFont', 22, alignment='CENTER')
-    faction_style = create_paragraph_style('MedievalFont', 16, alignment='CENTER')
-    header_style = create_paragraph_style('MedievalFont', 14, alignment='CENTER')
-    character_name_style = create_paragraph_style('MedievalFont', 10, alignment='CENTER')
+    title_style = create_paragraph_style(font_name, 22, alignment='CENTER')
+    faction_style = create_paragraph_style(font_name, 16, alignment='CENTER')
+    header_style = create_paragraph_style(font_name, 14, alignment='CENTER')
+    character_name_style = create_paragraph_style(font_name, 10, alignment='CENTER')
 
     # Add title with extra space
     elements.append(Paragraph("Cenzus", title_style))
@@ -74,7 +83,7 @@ def generate_census(df, font_path, output_pdf):
         table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Horizontal center alignment for all cells
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Vertical center alignment for all cells
-            ('FONTNAME', (0, 0), (-1, -1), 'MedievalFont'),
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
             ('FONTSIZE', (0, 0), (-1, -1), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('GRID', (0, 0), (-1, -1), 0.25, colors.black),  # Internal gridlines
