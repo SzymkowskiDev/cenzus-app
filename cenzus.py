@@ -1,4 +1,3 @@
-import streamlit as st
 import pandas as pd
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -7,7 +6,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib import colors
-import os
 
 # Utility function to create a ParagraphStyle
 def create_paragraph_style(font_name, font_size, alignment='CENTER', leading=14):
@@ -28,7 +26,10 @@ def format_character_name(name):
         return f'<font size=14>{name_parts[0]}</font><br/><font size=10>{name_parts[1]}</font>'
 
 # Function to generate census PDF
-def generate_census(df, font_path, output_pdf):
+def generate_census(csv_file, font_path, output_pdf):
+    # Load the CSV data
+    df = pd.read_csv(csv_file)
+
     # Filter records where the character should be included in the public census
     df = df[df.iloc[:, 4].str.contains("Tak", na=False)]
 
@@ -88,29 +89,11 @@ def generate_census(df, font_path, output_pdf):
     # Build the PDF
     pdf.build(elements)
 
-# Streamlit app
-st.title("Census PDF Generator")
+# Main function to execute the census generation
+if __name__ == "__main__":
+    csv_file = "cenzus_tool/Cenzus postaci (Responses) - Form responses 1.csv"
+    font_path = "cenzus_tool/Berylium.ttf"  # Update with the actual path to the medieval font
+    output_pdf = "cenzus_tool/Spis_Postaci.pdf"
 
-# Upload CSV file
-csv_file = st.file_uploader("Upload your CSV file", type="csv")
-
-# Font path (you can adjust this)
-font_path = "cenzus_tool/Berylium.ttf"  # Update with the correct path
-
-# Button to generate PDF if CSV is uploaded
-if csv_file is not None:
-    df = pd.read_csv(csv_file)
-
-    if st.button("Generate PDF"):
-        # Generate the PDF
-        output_pdf = "generated_census.pdf"
-        generate_census(df, font_path, output_pdf)
-
-        # Provide a download link for the PDF
-        with open(output_pdf, "rb") as pdf_file:
-            st.download_button(
-                label="Download PDF",
-                data=pdf_file,
-                file_name=output_pdf,
-                mime="application/pdf"
-            )
+    generate_census(csv_file, font_path, output_pdf)
+    print(f"Generated {output_pdf} successfully!")
